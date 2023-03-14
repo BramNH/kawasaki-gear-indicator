@@ -35,6 +35,25 @@ esp32 can't drive the pin
 #define KWP2000_h
 
 /**
+ * @brief You need to pass to the constructor one of these
+ */
+enum brand
+{
+  SUZUKI,
+  KAWASAKI,
+  YAMAHA,
+  HONDA
+};
+
+/**
+ * @brief Some model from the same brand could have different request codes or index for the bytes
+ */
+enum model
+{
+  NONE
+};
+
+/**
  * @brief Collection of possible debug levels
  */
 enum debug_enum
@@ -58,14 +77,18 @@ class KWP2000
 {
 public:
   // CONSTRUCTOR
-  KWP2000(HardwareSerial *kline_serial, const uint8_t k_out_pin);
+  KWP2000(HardwareSerial *kline_serial, const uint8_t k_out_pin, const brand brand, const model = NONE);
 
   // SETUP
-  void enableDebug(SoftwareSerial *debug_serial, const uint8_t debug_level = DEBUG_LEVEL_DEFAULT, const uint32_t debug_baudrate = 115200);
+  void enableDebug(HardwareSerial *debug_serial, const uint8_t debug_level = DEBUG_LEVEL_DEFAULT, const uint32_t debug_baudrate = 115200);
   void setDebugLevel(const uint8_t debug_level);
   void disableDebug();
+  void enableDealerMode(const uint8_t dealer_pin);
+  void setDealerMode(const uint8_t dealer_mode);
+  bool getDealerMode();
   void use_imperial();
   void use_metric();
+  void setResponseMemorySize(uint8_t size); // bram
 
   // COMMUNICATION - Basic
   int8_t initKline();
@@ -82,12 +105,17 @@ public:
   // void resetTimingParameter();
   // void changeTimingParameter(uint32_t new_atp[], const uint8_t new_atp_len
 
-  int8_t requestGPS();
+  // Fetch and Get specific sensor data directly
+  uint8_t requestGPSDirect(); // bram
+  uint8_t requestRPMDirect(); // bram
+  float requestVoltDirect();  // bram
 
   // PRINT and GET
   void printStatus(uint16_t time = 5000);
   void printSensorsData();
   void printLastResponse();
+  void printAllResponses();           // bram
+  uint8_t getResponseByte(uint8_t n); // bram
   int8_t getStatus();
   int8_t getError();
   void resetError();
@@ -100,10 +128,13 @@ public:
   uint8_t getIAP();
   uint8_t getIAT();
   uint8_t getECT();
+  float getVOLT();
 
 private:
   // K-Line
   HardwareSerial *_kline;
+  brand _brand;
+  model _model;
   uint8_t _k_out_pin;
   uint8_t _dealer_pin;
   bool _dealer_enabled = false;
@@ -115,6 +146,8 @@ private:
   uint8_t *_response;
   uint8_t _response_len = 0;
   uint8_t _response_data_start = 0;
+  uint8_t *_response_array; // bram
+  uint8_t _n_responses = 0; // bram
   uint8_t _ECU_status = false;
   uint32_t _ECU_error = 0;
   uint8_t _init_phase = 0;
@@ -133,7 +166,7 @@ private:
   uint16_t _keep_iso_alive = 1500;
 
   // debug
-  SoftwareSerial *_debug;
+  HardwareSerial *_debug;
   uint8_t _debug_enabled = false;
   uint32_t _debug_baudrate;
   uint8_t _debug_level = DEBUG_LEVEL_DEFAULT;
@@ -143,11 +176,14 @@ private:
   uint32_t _last_correct_response = 0;
   uint32_t _connection_time = 0;
 
+  uint8_t _lcd_enabled = false; // bram
+
   // sensors
   bool _use_metric_system = true;
 
   uint8_t _GPS, _CLUTCH, _TPS, _IAP, _ECT, _STPS, _IAT;
   uint16_t _RPM, _SPEED;
+  float _VOLT;
 
   // functions
   void sendRequest(const uint8_t to_send[], const uint8_t send_len, const uint8_t wait_to_send_all = true, const uint8_t use_delay = true);
@@ -159,6 +195,7 @@ private:
   uint8_t calc_checksum(const uint8_t data[], const uint8_t data_len);
   void endResponse(const uint8_t received_checksum);
   void connectionExpired();
+  void set_bike_specific_values(const brand brand, const model model);
 };
 
 #endif // KWP2000_h

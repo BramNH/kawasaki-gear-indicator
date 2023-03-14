@@ -73,6 +73,7 @@ const uint8_t request_rejected = 0x7F;
 
 uint8_t ECU_addr;
 
+uint8_t suzuki_request_sens[] = {0x21, 0x08};
 uint8_t kawasaki_request_gps[2] = {0x21, 0x0B};
 uint8_t kawasaki_request_rpm[2] = {0x21, 0x09};
 uint8_t kawasaki_request_speed[2] = {0x21, 0x0c};
@@ -80,6 +81,8 @@ uint8_t kawasaki_request_tps[2] = {0x21, 0x04};
 uint8_t kawasaki_request_iap[2] = {0x21, 0x07};
 uint8_t kawasaki_request_iat[2] = {0x21, 0x05};
 uint8_t kawasaki_request_ect[2] = {0x21, 0x06};
+uint8_t yamaha_request_sens[2] = {'?'};
+uint8_t honda_request_sens[2] = {'?'};
 
 uint8_t IDX_GPS;
 uint8_t IDX_CLUTCH;
@@ -91,5 +94,64 @@ uint8_t IDX_STPS;
 uint8_t IDX_IAP;
 uint8_t IDX_IAT;
 uint8_t IDX_ECT;
+uint8_t IDX_VOLT;
+
+void KWP2000::set_bike_specific_values(const brand brand, const model model)
+{
+    if (brand == SUZUKI)
+    {
+        ECU_addr = 0x12;
+
+        IDX_GPS = 26;
+        IDX_CLUTCH = 52;
+        IDX_RPM_H = 17;
+        IDX_RPM_L = 18;
+        IDX_SPEED = 16;
+        IDX_TPS = 19;
+        IDX_STPS = 46;
+        IDX_IAP = 20;
+        IDX_IAT = 22;
+        IDX_ECT = 21;
+        IDX_VOLT = 24;
+        /*
+        CLT??   20
+        HO2??   25
+        IAP2??  27
+        idle speed?? 28
+        ISC valve controls the volume of air that bypasses the throttle valve -29
+        Fuel 31-38
+        mode (map)?? 50
+        pair 51
+        */
+    }
+    else if (brand == KAWASAKI)
+    {
+        ECU_addr = 0x11;
+        start_diagnostic[1] = {0x80};
+        IDX_GPS = 6;
+        IDX_RPM_H = 6;
+        IDX_RPM_L = 7;
+        IDX_SPEED = 6;
+        IDX_TPS = 6;
+        IDX_IAP = 6;
+        IDX_IAT = 6;
+        IDX_ECT = 6;
+    }
+    else if (brand == YAMAHA)
+    {
+        /*
+        As far as I could understand the YDS (Yamaha Diagnostic Protocol) protocol, it is close to the Honda protocol.
+        There are no sender-/receiver-addresses or header information. Just the checksum at the end.
+        You initialize the diagnostic mode by sending 0x80 and from then on you can just submit 0x02 and it gives you:
+        Rpm, Speed, Error, Gear & Checksum.
+        */
+        ECU_addr = '?';
+    }
+    else if (brand == HONDA)
+    {
+        // https://gonzos.net/projects/ctx-obd/
+        ECU_addr = '?';
+    }
+}
 
 #endif // ISO_h

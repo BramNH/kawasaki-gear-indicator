@@ -3,10 +3,11 @@
 #include <Adafruit_NeoPixel.h>
 #include "KWP2000.h"
 
-#define K_OUT 1       // Tx on Arduino
-#define K_IN 0        // Rx on Arduino
-#define BIKE Serial   // Serial communication with bike
-#define FETCH_RATE 10 // 10 times / s
+#define K_OUT 1     // Tx on Arduino
+#define K_IN 0      // Rx on Arduino
+#define BIKE Serial // Serial communication with bike
+// #define FETCH_RATE 10 // 10 times / s
+#define BOARD_LED 13
 
 #define DEBUG_IN 2  // SoftwareSerial Rx
 #define DEBUG_OUT 3 // SoftwareSerial Tx
@@ -17,10 +18,10 @@
 #define COLOR_NON_ACTIVE_GEAR 0x001000 // Light green
 #define COLOR_NEUTRAL 0xFF4500         // Orange red
 
-SoftwareSerial debug(DEBUG_IN, DEBUG_OUT);
+// SoftwareSerial debug(DEBUG_IN, DEBUG_OUT);
 Adafruit_NeoPixel ledstrip(LEDSTRIP_PIXELS, LEDSTRIP_PIN, NEO_GRB + NEO_KHZ800);
 
-KWP2000 ECU(&BIKE, K_OUT);
+KWP2000 ECU(&BIKE, K_OUT, KAWASAKI);
 
 int8_t initKline();
 void setGearOnLedstrip(uint8_t gear);
@@ -31,9 +32,10 @@ void setup()
 {
   pinMode(K_OUT, OUTPUT); // required?
   pinMode(K_IN, INPUT);   // required?
-
-  ledstrip.begin();
-  ledstripAnimation();
+  pinMode(BOARD_LED, OUTPUT);
+  digitalWrite(BOARD_LED, LOW);
+  // ledstrip.begin();
+  // ledstripAnimation();
 
   // Test gears display on ledstrip
   /*for (int gear = 0; gear < 7; gear++)
@@ -42,31 +44,31 @@ void setup()
     delay(1000);
   }*/
 
-  ECU.enableDebug(&debug, DEBUG_LEVEL_VERBOSE, 9600);
-  // if initialization is negative, terminate (hardware must be reset).
-  if (initKline() < 0)
+  ECU.setDebugLevel(DEBUG_LEVEL_NONE);
+  delay(2000);
+
+  int8_t status = ECU.initKline();
+  while (status == 0)
   {
-    terminate();
+    status = ECU.initKline();
+  }
+  if (status < 0)
+  {
+    digitalWrite(BOARD_LED, HIGH);
+  }
+  while (status == 1)
+  {
+    digitalWrite(BOARD_LED, HIGH);
+    delay(50);
+    digitalWrite(BOARD_LED, LOW);
+    delay(50);
   }
 }
 
 void loop()
 {
-  int8_t status = ECU.requestGPS();
-  if (status)
-  {
-    uint8_t gear = ECU.getGPS();
-    // set LED accordingly
-    setGearOnLedstrip(gear);
-  }
-  else
-  {
-    if (initKline() < 0)
-    {
-      terminate();
-    }
-  }
-  delay(1000 / FETCH_RATE);
+  uint8_t gear = ECU.requestGPSDirect();
+  delay(100);
 }
 
 int8_t initKline()
@@ -119,6 +121,6 @@ void terminate()
   ledstrip.clear();
   ledstrip.show();
   Serial.end();
-  debug.println("Hardware terminating");
+  // debug.println("Hardware terminating");
   exit(0);
 }
