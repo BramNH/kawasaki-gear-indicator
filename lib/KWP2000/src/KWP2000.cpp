@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #define KWP2000_cpp
 
 #include <Arduino.h>
+#include <SoftwareSerial.h>
 
 #include "KWP2000.h"
 #include "ISO.h"
@@ -89,16 +90,16 @@ KWP2000::KWP2000(HardwareSerial *kline_serial, const uint8_t k_out_pin, const br
  * @param debug_level The verbosity of the debug, default to `DEBUG_LEVEL_DEFAULT`
  * @param debug_baudrate The baudrate for the debug, default to `115200`
  */
-void KWP2000::enableDebug(HardwareSerial *debug_serial, const uint8_t debug_level, const uint32_t debug_baudrate)
+void KWP2000::enableDebug(SoftwareSerial *debug_serial, const uint8_t debug_level, const uint32_t debug_baudrate)
 {
     _debug = debug_serial;
     _debug_level = debug_level;
-    //_debug->begin(debug_baudrate);
+    _debug->begin(debug_baudrate);
     _debug_enabled = true;
 
     if (_debug_level >= DEBUG_LEVEL_DEFAULT)
     {
-        //_debug->println(F("Debug enabled"));
+        _debug->println(F("Debug enabled"));
     }
 }
 
@@ -120,8 +121,8 @@ void KWP2000::setDebugLevel(const uint8_t debug_level)
     }
     if (_debug_level >= DEBUG_LEVEL_DEFAULT)
     {
-        //_debug->print(F("Debug level: "));
-        //_debug->println(debug_level == DEBUG_LEVEL_DEFAULT ? "default" : "verbose");
+        _debug->print(F("Debug level: "));
+        _debug->println(debug_level == DEBUG_LEVEL_DEFAULT ? "default" : "verbose");
     }
 }
 
@@ -132,9 +133,9 @@ void KWP2000::disableDebug()
 {
     if (_debug_level >= DEBUG_LEVEL_DEFAULT)
     {
-        //_debug->println(F("Debug disabled"));
+        _debug->println(F("Debug disabled"));
     }
-    //_debug->end();
+    _debug->end();
     _debug_enabled = false;
 }
 
@@ -170,8 +171,8 @@ void KWP2000::setDealerMode(const uint8_t dealer_mode)
     digitalWrite(_dealer_pin, _dealer_mode);
     if (_debug_level >= DEBUG_LEVEL_DEFAULT)
     {
-        //_debug->print(F("Dealer mode: "));
-        //_debug->println(_dealer_mode == true ? "Enabled" : "Disabled");
+        _debug->print(F("Dealer mode: "));
+        _debug->println(_dealer_mode == true ? "Enabled" : "Disabled");
     }
 }
 
@@ -375,7 +376,7 @@ int8_t KWP2000::stopKline()
     {
         if (_debug_level >= DEBUG_LEVEL_DEFAULT)
         {
-            //_debug->println(F("\nAlready disconnected"));
+            _debug->println(F("\nAlready disconnected"));
         }
         return 1;
     }
@@ -386,7 +387,7 @@ int8_t KWP2000::stopKline()
 
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println(F("Closing K-line"));
+            _debug->println(F("Closing K-line"));
         }
 
         if (handleRequest(stop_com, LEN(stop_com)) == true)
@@ -431,7 +432,7 @@ int8_t KWP2000::stopKline()
     {
         if (_debug_level >= DEBUG_LEVEL_DEFAULT)
         {
-            //_debug->println(F("ECU disconnected"));
+            _debug->println(F("ECU disconnected"));
         }
         _ECU_status = false;
         _start_time = 0;
@@ -450,7 +451,7 @@ void KWP2000::requestSensorsData()
     {
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println(F("Not connected to the ECU"));
+            _debug->println(F("Not connected to the ECU"));
         }
         setError(EE_USER);
         return;
@@ -458,7 +459,7 @@ void KWP2000::requestSensorsData()
 
     if (_debug_level >= DEBUG_LEVEL_DEFAULT)
     {
-        //_debug->println(F("Requesting Sensors Data"));
+        _debug->println(F("Requesting Sensors Data"));
     }
 
     if (_brand == SUZUKI)
@@ -540,7 +541,7 @@ void KWP2000::readTroubleCodes(const trouble_code which)
     {
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println(F("Not connected to the ECU"));
+            _debug->println(F("Not connected to the ECU"));
         }
         setError(EE_USER);
         return;
@@ -562,14 +563,14 @@ void KWP2000::readTroubleCodes(const trouble_code which)
     const uint8_t DTC_total = _response[_response_data_start + 1]; // Diagnosis trouble codes
     if (_debug_level >= DEBUG_LEVEL_DEFAULT)
     {
-        //_debug->print("There are ");
-        //_debug->print(DTC_total);
-        //_debug->println(" errors\n");
+        _debug->print("There are ");
+        _debug->print(DTC_total);
+        _debug->println(" errors\n");
         for (uint8_t n = _response_data_start + 2; n < _response_len; n++)
         {
-            //_debug->print(_response[n]); // todo needed more test to understand the DTC number, value and status parameters
+            _debug->print(_response[n]); // todo needed more test to understand the DTC number, value and status parameters
         }
-        //_debug->println();
+        _debug->println();
     }
 }
 
@@ -584,7 +585,7 @@ void KWP2000::clearTroubleCodes(const uint8_t code)
     {
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println(F("Not connected to the ECU"));
+            _debug->println(F("Not connected to the ECU"));
         }
         setError(EE_USER);
         return;
@@ -651,14 +652,14 @@ void KWP2000::keepAlive(uint16_t time)
         uint8_t in;
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println("Serial buffer not empty:");
+            _debug->println("Serial buffer not empty:");
         }
         while (_kline->available() > 0)
         {
             in = _kline->read();
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(in, HEX);
+                _debug->println(in, HEX);
             }
         }
     }
@@ -675,7 +676,7 @@ void KWP2000::keepAlive(uint16_t time)
         {
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(F("\nConnection expired"));
+                _debug->println(F("\nConnection expired"));
             }
             _ECU_status = false;
             _last_data_print = 0;
@@ -708,8 +709,8 @@ void KWP2000::keepAlive(uint16_t time)
 
     if (_debug_level == DEBUG_LEVEL_VERBOSE)
     {
-        //_debug->print(F("\nKeeping connection alive\nLast:"));
-        //_debug->println(millis() - _last_correct_response);
+        _debug->print(F("\nKeeping connection alive\nLast:"));
+        _debug->println(millis() - _last_correct_response);
     }
 
     // Send a dummy request
@@ -767,11 +768,11 @@ int8_t KWP2000::handleRequest(const uint8_t to_send[], const uint8_t send_len, c
         {
             if (_debug_level == DEBUG_LEVEL_VERBOSE && try_once == false)
             {
-                //_debug->print(F("Attempt "));
-                //_debug->print(attempt);
-                //_debug->print(F(" not luckly"));
-                //_debug->println(attempt < 3 ? ", trying again"
-                //: "\nWe wasn't able to comunicate");
+                _debug->print(F("Attempt "));
+                _debug->print(attempt);
+                _debug->print(F(" not luckly"));
+                _debug->println(attempt < 3 ? ", trying again"
+                                            : "\nWe werent't able to comunicate");
             }
             attempt++;
         }
@@ -1115,41 +1116,41 @@ void KWP2000::printStatus(uint16_t time)
 
     if (_debug_enabled == true)
     {
-        //_debug->print(F("\n---- STATUS ----\n"));
-        //_debug->print(F("Connection:\t\t"));
-        //_debug->println(_ECU_status == 1 ? "Connected" : "Not connected");
-        //_debug->print(F("Errors:\t\t\t"));
-        //_debug->println(_ECU_error == 0 ? "No" : "Yes");
+        _debug->print(F("\n---- STATUS ----\n"));
+        _debug->print(F("Connection:\t\t"));
+        _debug->println(_ECU_status == 1 ? "Connected" : "Not connected");
+        _debug->print(F("Errors:\t\t\t"));
+        _debug->println(_ECU_error == 0 ? "No" : "Yes");
 
         if (_last_correct_response != 0)
         {
-            //_debug->print(F("Last data:\t\t"));
-            //_debug->print((millis() - _last_correct_response) / 1000.0);
-            //_debug->print(F(" seconds ago"));
+            _debug->print(F("Last data:\t\t"));
+            _debug->print((millis() - _last_correct_response) / 1000.0);
+            _debug->print(F(" seconds ago"));
         }
 
         if (_connection_time != 0)
         {
-            //_debug->print(F("Connection time:"));
-            //_debug->print((millis() - _connection_time) / 1000.0);
-            //_debug->println(" seconds ago");
+            _debug->print(F("Connection time:"));
+            _debug->print((millis() - _connection_time) / 1000.0);
+            _debug->println(" seconds ago");
         }
 
-        //_debug->print(F("Baudrate:\t\t"));
-        //_debug->println(ISO_BAUDRATE);
-        //_debug->print(F("K-line TX pin:\t\t"));
-        //_debug->println(_k_out_pin);
+        _debug->print(F("Baudrate:\t\t"));
+        _debug->println(ISO_BAUDRATE);
+        _debug->print(F("K-line TX pin:\t\t"));
+        _debug->println(_k_out_pin);
         if (_brand == SUZUKI)
         {
-            //_debug->print(F("Dealer pin:\t\t"));
-            //_debug->println(_dealer_pin);
-            //_debug->print(F("Dealer mode:\t"));
-            //_debug->println(_dealer_mode == 1 ? "Enabled" : "Disabled");
+            _debug->print(F("Dealer pin:\t\t"));
+            _debug->println(_dealer_pin);
+            _debug->print(F("Dealer mode:\t"));
+            _debug->println(_dealer_mode == 1 ? "Enabled" : "Disabled");
         }
         // other stuff?
         if (_ECU_error != 0)
         {
-            //_debug->print(F("\n---- ERRORS ----\n"));
+            _debug->print(F("\n---- ERRORS ----\n"));
             for (uint8_t i = 0; i < EE_TOTAL; i++)
             {
                 if (bitRead(_ECU_error, i) != 0)
@@ -1157,59 +1158,59 @@ void KWP2000::printStatus(uint16_t time)
                     switch (i)
                     {
                     case EE_USER:
-                        //_debug->println(F("We called some function in a wrong way"));
+                        _debug->println(F("We called some function in a wrong way"));
                         break;
                     case EE_START:
-                        //_debug->println(F("Unable to start comunication"));
+                        _debug->println(F("Unable to start comunication"));
                         break;
                     case EE_STOP:
-                        //_debug->println(F("Unable to stop comunication"));
+                        _debug->println(F("Unable to stop comunication"));
                         break;
                     case EE_TO:
-                        //_debug->println(F("Data is not for us"));
+                        _debug->println(F("Data is not for us"));
                         break;
                     case EE_FROM:
-                        //_debug->println(F("Data don't came from the ECU"));
+                        _debug->println(F("Data don't came from the ECU"));
                         break;
                     case EE_CS:
-                        //_debug->println(F("Checksum error"));
+                        _debug->println(F("Checksum error"));
                         break;
                     case EE_ECHO:
-                        //_debug->println(F("Echo error"));
+                        _debug->println(F("Echo error"));
                         break;
                     case EE_UNEX:
-                        //_debug->println(F("Unexpected error"));
+                        _debug->println(F("Unexpected error"));
                         break;
                     case EE_HEADER:
-                        //_debug->println(F("Unexpected header"));
+                        _debug->println(F("Unexpected header"));
                         break;
                     case EE_CONFIG:
-                        //_debug->println(F("The key bytes are probably wrong"));
+                        _debug->println(F("The key bytes are probably wrong"));
                         break;
                     case EE_P3MAX:
-                        //_debug->println(F("Time out of the communication"));
+                        _debug->println(F("Time out of the communication"));
                         break;
                     case EE_CR:
-                        //_debug->println(F("Check response error"));
+                        _debug->println(F("Check response error"));
                         break;
                     case EE_ATP:
-                        //_debug->println(F("Problem setting the timing parameter"));
+                        _debug->println(F("Problem setting the timing parameter"));
                         break;
                     case EE_WR:
-                        //_debug->println(F("We get a reject for a request we didn't sent"));
+                        _debug->println(F("We get a reject for a request we didn't sent"));
                         break;
                     case EE_US:
-                        //_debug->println(F("Unsupported, yet"));
+                        _debug->println(F("Unsupported, yet"));
                         break;
                     default:
-                        //_debug->print(F("Did I forget any enum?"));
-                        //_debug->println(i);
+                        _debug->print(F("Did I forget any enum?"));
+                        _debug->println(i);
                         break;
                     }
                 }
             }
         }
-        //_debug->print(F("---- ------- ----\n\n"));
+        _debug->print(F("---- ------- ----\n\n"));
         _last_status_print = millis();
     }
     else
@@ -1228,7 +1229,7 @@ void KWP2000::printSensorsData()
         // we didn't run requestSensorsData
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->print(F("requestSensorsData() needs to be called before"));
+            _debug->print(F("requestSensorsData() needs to be called before"));
         }
         setError(EE_USER);
         return;
@@ -1236,32 +1237,32 @@ void KWP2000::printSensorsData()
 
     if (_debug_enabled == true)
     {
-        //_debug->print(F("---- SENSORS ----\n"));
-        //_debug->print(F("Calculated: "));
-        //_debug->print(millis() - _last_sensors_calculated);
-        //_debug->println(F(" milliseconds ago"));
-        //_debug->print(F("GPS:\t"));
-        //_debug->println(_GPS);
-        //_debug->print(F("CLUTCH:\t"));
-        //_debug->println(_CLUTCH);
-        //_debug->print(F("RPM:\t"));
-        //_debug->println(_RPM);
-        //_debug->print(F("Speed:\t"));
-        //_debug->println(_SPEED);
-        //_debug->print(F("TPS:\t"));
-        //_debug->println(_TPS);
-        //_debug->print(F("STPS:\t"));
-        //_debug->println(_STPS);
-        //_debug->print(F("IAP:\t"));
-        //_debug->println(_IAP);
-        //_debug->print(F("IAT:\t"));
-        //_debug->println(_IAT);
-        //_debug->print(F("ECT:\t"));
-        //_debug->println(_ECT);
-        //_debug->print(F("VOLT:\t"));
-        //_debug->println(_VOLT);
+        _debug->print(F("---- SENSORS ----\n"));
+        _debug->print(F("Calculated: "));
+        _debug->print(millis() - _last_sensors_calculated);
+        _debug->println(F(" milliseconds ago"));
+        _debug->print(F("GPS:\t"));
+        _debug->println(_GPS);
+        _debug->print(F("CLUTCH:\t"));
+        _debug->println(_CLUTCH);
+        _debug->print(F("RPM:\t"));
+        _debug->println(_RPM);
+        _debug->print(F("Speed:\t"));
+        _debug->println(_SPEED);
+        _debug->print(F("TPS:\t"));
+        _debug->println(_TPS);
+        _debug->print(F("STPS:\t"));
+        _debug->println(_STPS);
+        _debug->print(F("IAP:\t"));
+        _debug->println(_IAP);
+        _debug->print(F("IAT:\t"));
+        _debug->println(_IAT);
+        _debug->print(F("ECT:\t"));
+        _debug->println(_ECT);
+        _debug->print(F("VOLT:\t"));
+        _debug->println(_VOLT);
 
-        //_debug->print(F("---- ------- ----\n"));
+        _debug->print(F("---- ------- ----\n"));
         _last_data_print = millis();
     }
     else
@@ -1277,10 +1278,10 @@ void KWP2000::printLastResponse()
 {
     if (_debug_enabled == true)
     {
-        //_debug->println(F("Last Response from the ECU:"));
+        _debug->println(F("Last Response from the ECU:"));
         for (uint8_t n = 0; n < _response_len; n++)
         {
-            //_debug->println(_response[n], HEX);
+            _debug->println(_response[n], HEX);
         }
     }
     else
@@ -1456,9 +1457,9 @@ void KWP2000::sendRequest(const uint8_t pid[], const uint8_t pid_len, const uint
         {
             if (i == 0)
             {
-                //_debug->println(F("\nSending\t\tEcho"));
+                _debug->println(F("\nSending\t\tEcho"));
             }
-            //_debug->println(request[i], HEX);
+            _debug->println(request[i], HEX);
         }
 
         _start_time = millis();
@@ -1468,8 +1469,8 @@ void KWP2000::sendRequest(const uint8_t pid[], const uint8_t pid_len, const uint
             if (_kline->available() > 0)
             {
                 echo = _kline->read();
-                //_debug->print("\t\t\t");
-                //_debug->println(echo, HEX);
+                _debug->print("\t\t\t");
+                _debug->println(echo, HEX);
             }
         }
         _elapsed_time = 0;
@@ -1526,10 +1527,10 @@ void KWP2000::listenResponse(const uint8_t use_delay)
             {
                 if (n_byte == 0)
                 {
-                    //_debug->print(F("\nReceiving:"));
+                    _debug->print(F("\nReceiving:"));
                 }
-                //_debug->print(F("\n"));
-                //_debug->print(incoming, HEX);
+                _debug->print(F("\n"));
+                _debug->print(incoming, HEX);
             }
 
             last_data_received = millis(); // reset the timer for each byte received
@@ -1547,14 +1548,14 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                 {
                     if (_debug_level == DEBUG_LEVEL_VERBOSE)
                     {
-                        //_debug->print(F("\t- format physical"));
+                        _debug->print(F("\t- format physical"));
                     }
                 }
                 else if (masked == format_functional)
                 {
                     if (_debug_level == DEBUG_LEVEL_VERBOSE)
                     {
-                        //_debug->print(F("\t- format functional"));
+                        _debug->print(F("\t- format functional"));
                     }
                     setError(EE_US);
                 }
@@ -1562,7 +1563,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                 {
                     if (_debug_level == DEBUG_LEVEL_VERBOSE)
                     {
-                        //_debug->print(F("\t- format CARB"));
+                        _debug->print(F("\t- format CARB"));
                     }
                     setError(EE_US);
                 }
@@ -1570,7 +1571,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                 {
                     if (_debug_level == DEBUG_LEVEL_VERBOSE)
                     {
-                        //_debug->print(F("\t- unexpected header"));
+                        _debug->print(F("\t- unexpected header"));
                     }
                     setError(EE_HEADER);
                 }
@@ -1584,9 +1585,9 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                         data_to_rcv = masked;
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
-                            //_debug->print(F("\t- "));
-                            //_debug->print(data_to_rcv);
-                            //_debug->print(F(" data bytes coming"));
+                            _debug->print(F("\t- "));
+                            _debug->print(data_to_rcv);
+                            _debug->print(F(" data bytes coming"));
                         }
 
                         if (_use_length_byte == maybe)
@@ -1624,7 +1625,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                     {
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
-                            //_debug->print(F("\t- ECU is communicating with us"));
+                            _debug->print(F("\t- ECU is communicating with us"));
                         }
                     }
                     else
@@ -1632,7 +1633,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
                             // (I'm not jealous it's just curiosity :P)
-                            //_debug->print(F("\t- ECU is communicating with this address"));
+                            _debug->print(F("\t- ECU is communicating with this address"));
                         }
                         setError(EE_TO);
                     }
@@ -1644,9 +1645,9 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                         data_to_rcv = incoming;
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
-                            //_debug->print(F("\t- "));
-                            //_debug->print(data_to_rcv);
-                            //_debug->print(F(" data bytes coming"));
+                            _debug->print(F("\t- "));
+                            _debug->print(data_to_rcv);
+                            _debug->print(F(" data bytes coming"));
                         }
                     }
                     else // data
@@ -1654,7 +1655,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                         data_rcvd++;
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
-                            //_debug->print(F("\t- data"));
+                            _debug->print(F("\t- data"));
                         }
                         if (_response_data_start == 0)
                         {
@@ -1672,7 +1673,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                     {
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
-                            //_debug->print(F("\t- comes from the ECU"));
+                            _debug->print(F("\t- comes from the ECU"));
                         }
                     }
                     else
@@ -1680,7 +1681,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
                             // check who sent it
-                            //_debug->print(F("\t- doesn't come from the ECU"));
+                            _debug->print(F("\t- doesn't come from the ECU"));
                         }
                         setError(EE_FROM);
                     }
@@ -1698,7 +1699,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                         data_rcvd++;
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
-                            //_debug->print(F("\t- data"));
+                            _debug->print(F("\t- data"));
                         }
                         if (_response_data_start == 0)
                         {
@@ -1715,7 +1716,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                     data_to_rcv = incoming;
                     if (_debug_level == DEBUG_LEVEL_VERBOSE)
                     {
-                        //_debug->print(F("\t- data bytes coming (HEX)"));
+                        _debug->print(F("\t- data bytes coming (HEX)"));
                     }
                 }
                 else // data or checksum
@@ -1731,7 +1732,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                         data_rcvd++;
                         if (_debug_level == DEBUG_LEVEL_VERBOSE)
                         {
-                            //_debug->print(F("\t- data"));
+                            _debug->print(F("\t- data"));
                         }
                         if (_response_data_start == 0)
                         {
@@ -1754,7 +1755,7 @@ void KWP2000::listenResponse(const uint8_t use_delay)
                     data_rcvd++;
                     if (_debug_level == DEBUG_LEVEL_VERBOSE)
                     {
-                        //_debug->print(F("\t- data"));
+                        _debug->print(F("\t- data"));
                     }
                     if (_response_data_start == 0)
                     {
@@ -1785,7 +1786,7 @@ int8_t KWP2000::checkResponse(const uint8_t request_sent[])
     {
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println(F("\nCorrect response from the ECU\n"));
+            _debug->println(F("\nCorrect response from the ECU\n"));
         }
         return true;
     }
@@ -1793,7 +1794,7 @@ int8_t KWP2000::checkResponse(const uint8_t request_sent[])
     {
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println(F("\nNo response from the ECU\n"));
+            _debug->println(F("\nNo response from the ECU\n"));
         }
         return -1;
     }
@@ -1801,7 +1802,7 @@ int8_t KWP2000::checkResponse(const uint8_t request_sent[])
     {
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->print(F("\nRequest rejected with code: "));
+            _debug->print(F("\nRequest rejected with code: "));
         }
 
         if (_response[_response_data_start + 1] != request_sent[0])
@@ -1818,28 +1819,28 @@ int8_t KWP2000::checkResponse(const uint8_t request_sent[])
         case 0x10:
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(F("General\n"));
+                _debug->println(F("General\n"));
             }
             return -2;
 
         case 0x11:
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(F("Service Not Supported\n"));
+                _debug->println(F("Service Not Supported\n"));
             }
             return -3;
 
         case 0x12:
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(F("Sub Function Not Supported or Invalid Format\n"));
+                _debug->println(F("Sub Function Not Supported or Invalid Format\n"));
             }
             return -4;
 
         case 0x21:
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(F("Busy, reapeat\n"));
+                _debug->println(F("Busy, reapeat\n"));
             }
             setError(EE_US);
             // todo send again the request
@@ -1848,7 +1849,7 @@ int8_t KWP2000::checkResponse(const uint8_t request_sent[])
         case 0x22:
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(F("Conditions Not Correct or Request Sequence Error\n"));
+                _debug->println(F("Conditions Not Correct or Request Sequence Error\n"));
             }
             return -6;
             /*
@@ -1877,7 +1878,7 @@ int8_t KWP2000::checkResponse(const uint8_t request_sent[])
         case 0x78:
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(F("Request Correctly Received - Response Pending\n"));
+                _debug->println(F("Request Correctly Received - Response Pending\n"));
             }
             /*
             This response code shall only be used by a server in case it
@@ -1902,7 +1903,7 @@ int8_t KWP2000::checkResponse(const uint8_t request_sent[])
         default:
             if (_debug_level == DEBUG_LEVEL_VERBOSE)
             {
-                //_debug->println(F("Unknown error code\n"));
+                _debug->println(F("Unknown error code\n"));
             }
             return -8;
         }
@@ -1911,10 +1912,10 @@ int8_t KWP2000::checkResponse(const uint8_t request_sent[])
     {
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->print(F("\nUnexpected response: "));
+            _debug->print(F("\nUnexpected response: "));
             for (uint8_t n = _response_data_start; n < _response_len; n++)
             {
-                //_debug->println(_response[n], HEX);
+                _debug->println(_response[n], HEX);
             }
         }
         setError(EE_CR);
@@ -2046,19 +2047,19 @@ void KWP2000::configureKline()
 
     if (_debug_level == DEBUG_LEVEL_VERBOSE)
     {
-        //_debug->println("\nK line config:");
-        //_debug->print("Key bytes:\t\t\t0x");
-        //_debug->print(key_bytes, HEX);
-        //_debug->print(" - ");
-        //_debug->println(key_bytes, BIN);
-        //_debug->print("Errors:\t\t\t\t");
-        //_debug->println(bitRead(_ECU_error, EE_CONFIG) == 1 ? "Yes" : "No");
-        //_debug->print("Length byte:\t\t");
-        //_debug->println(_use_length_byte == 1 ? "Yes" : "No");
-        //_debug->print("Addresses bytes:\t");
-        //_debug->println(_use_target_source_address == 1 ? "Yes" : "No");
-        //_debug->print("Timing parameter:\t");
-        //_debug->println(_timing_parameter == 1 ? "Normal\n" : "Extended\n");
+        _debug->println("\nK line config:");
+        _debug->print("Key bytes:\t\t\t0x");
+        _debug->print(key_bytes, HEX);
+        _debug->print(" - ");
+        _debug->println(key_bytes, BIN);
+        _debug->print("Errors:\t\t\t\t");
+        _debug->println(bitRead(_ECU_error, EE_CONFIG) == 1 ? "Yes" : "No");
+        _debug->print("Length byte:\t\t");
+        _debug->println(_use_length_byte == 1 ? "Yes" : "No");
+        _debug->print("Addresses bytes:\t");
+        _debug->println(_use_target_source_address == 1 ? "Yes" : "No");
+        _debug->print("Timing parameter:\t");
+        _debug->println(_timing_parameter == 1 ? "Normal\n" : "Extended\n");
     }
 }
 
@@ -2090,10 +2091,10 @@ void KWP2000::endResponse(const uint8_t received_checksum)
 
     if (_debug_level == DEBUG_LEVEL_VERBOSE)
     {
-        //_debug->println(F("\t- checksum"));
-        //_debug->println(F("\nEnd of response"));
-        //_debug->print(F("Bytes received: "));
-        //_debug->println(_response_len);
+        _debug->println(F("\t- checksum"));
+        _debug->println(F("\nEnd of response"));
+        _debug->print(F("Bytes received: "));
+        _debug->println(_response_len);
     }
 
     correct_checksum = calc_checksum(_response, _response_len);
@@ -2102,7 +2103,7 @@ void KWP2000::endResponse(const uint8_t received_checksum)
         // the checksum is correct and everything went well!
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println(F("Correct checksum"));
+            _debug->println(F("Correct checksum"));
         }
         _last_correct_response = millis();
     }
@@ -2110,8 +2111,8 @@ void KWP2000::endResponse(const uint8_t received_checksum)
     {
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->print(F("Wrong checksum, expected: "));
-            //_debug->println(correct_checksum, HEX);
+            _debug->print(F("Wrong checksum, expected: "));
+            _debug->println(correct_checksum, HEX);
         }
         setError(EE_CS);
     }

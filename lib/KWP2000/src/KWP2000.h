@@ -80,7 +80,7 @@ public:
   KWP2000(HardwareSerial *kline_serial, const uint8_t k_out_pin, const brand brand, const model = NONE);
 
   // SETUP
-  void enableDebug(HardwareSerial *debug_serial, const uint8_t debug_level = DEBUG_LEVEL_DEFAULT, const uint32_t debug_baudrate = 115200);
+  void enableDebug(SoftwareSerial *debug_serial, const uint8_t debug_level = DEBUG_LEVEL_DEFAULT, const uint32_t debug_baudrate = 115200);
   void setDebugLevel(const uint8_t debug_level);
   void disableDebug();
   void enableDealerMode(const uint8_t dealer_pin);
@@ -166,7 +166,7 @@ private:
   uint16_t _keep_iso_alive = 1500;
 
   // debug
-  HardwareSerial *_debug;
+  SoftwareSerial *_debug;
   uint8_t _debug_enabled = false;
   uint32_t _debug_baudrate;
   uint8_t _debug_level = DEBUG_LEVEL_DEFAULT;

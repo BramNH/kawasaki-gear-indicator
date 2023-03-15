@@ -18,7 +18,7 @@
 #define COLOR_NON_ACTIVE_GEAR 0x001000 // Light green
 #define COLOR_NEUTRAL 0xFF4500         // Orange red
 
-// SoftwareSerial debug(DEBUG_IN, DEBUG_OUT);
+SoftwareSerial debug(DEBUG_IN, DEBUG_OUT);
 Adafruit_NeoPixel ledstrip(LEDSTRIP_PIXELS, LEDSTRIP_PIN, NEO_GRB + NEO_KHZ800);
 
 KWP2000 ECU(&BIKE, K_OUT, KAWASAKI);
@@ -44,7 +44,7 @@ void setup()
     delay(1000);
   }*/
 
-  ECU.setDebugLevel(DEBUG_LEVEL_NONE);
+  ECU.enableDebug(&debug, DEBUG_LEVEL_DEFAULT, 9600);
   delay(2000);
 
   int8_t status = initKline();
