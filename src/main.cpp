@@ -47,11 +47,7 @@ void setup()
   ECU.setDebugLevel(DEBUG_LEVEL_NONE);
   delay(2000);
 
-  int8_t status = ECU.initKline();
-  while (status == 0)
-  {
-    status = ECU.initKline();
-  }
+  int8_t status = initKline();
   if (status < 0)
   {
     digitalWrite(BOARD_LED, HIGH);

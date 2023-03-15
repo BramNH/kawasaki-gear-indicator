@@ -227,7 +227,7 @@ int8_t KWP2000::initKline()
     {
         if (_debug_level >= DEBUG_LEVEL_DEFAULT)
         {
-            //_debug->println(F("\nAlready connected"));
+            _debug->println(F("\nAlready connected"));
         }
         return 1;
     }
@@ -238,8 +238,9 @@ int8_t KWP2000::initKline()
 
         if (_debug_level >= DEBUG_LEVEL_DEFAULT)
         {
-            //_debug->println(F("\nInitialize K-line"));
+            _debug->println(F("\nInitialize K-line"));
         }
+
         /*
         if (ISO_T_IDLE == 0)
         {
@@ -259,14 +260,7 @@ int8_t KWP2000::initKline()
         */
 
         _use_length_byte = false;
-        if (_brand == SUZUKI || _brand == KAWASAKI)
-        {
-            _use_target_source_address = true;
-        }
-        else if (_brand == YAMAHA || _brand == HONDA)
-        {
-            _use_target_source_address = false;
-        }
+        _use_target_source_address = true;
 
         _kline->end();
 
@@ -278,7 +272,7 @@ int8_t KWP2000::initKline()
         _init_phase = 0;
         if (_debug_level == DEBUG_LEVEL_VERBOSE)
         {
-            //_debug->println(F("Starting sequence"));
+            _debug->println(F("Starting sequence"));
         }
     }
     _elapsed_time = millis() - _start_time;
@@ -318,12 +312,11 @@ int8_t KWP2000::initKline()
         _elapsed_time = 0;
         _kline->begin(ISO_BAUDRATE);
 
-        uint8_t resp = handleRequest(start_com, LEN(start_com), true);
-        if (!resp)
+        if (!handleRequest(start_com, LEN(start_com), true))
         {
             if (_debug_level >= DEBUG_LEVEL_DEFAULT)
             {
-                //_debug->println(F("Initialization failed"));
+                _debug->println(F("Initialization failed"));
             }
             _ECU_status = false;
             // ISO_T_IDLE = 0;
@@ -331,35 +324,32 @@ int8_t KWP2000::initKline()
             return -2;
         }
 
-        configureKline(); // maybe honda e yamaha shouldn't run this
+        configureKline();
 
-        if (_brand == KAWASAKI)
+        if (_debug_level >= DEBUG_LEVEL_DEFAULT)
+        {
+            _debug->println(F("First handshake ok, now starting diagnostic session"));
+        }
+
+        if (!handleRequest(start_diagnostic, LEN(start_diagnostic)))
         {
             if (_debug_level >= DEBUG_LEVEL_DEFAULT)
             {
-                //_debug->println(F("First handshake ok, now starting diagnostic session"));
+                _debug->println(F("Failed to start diagnostic"));
             }
-            uint8_t resp = handleRequest(start_diagnostic, LEN(start_diagnostic));
-            if (!resp)
-            {
-                if (_debug_level >= DEBUG_LEVEL_DEFAULT)
-                {
-                    //_debug->println(F("Failed to start diagnostic"));
-                }
-                _ECU_status = false;
-                // ISO_T_IDLE = 0;
-                setError(EE_START);
-                return -2;
-            }
-            if (_debug_level >= DEBUG_LEVEL_DEFAULT)
-            {
-                //_debug->println(F("Start diagnostic successful"));
-            }
+            _ECU_status = false;
+            // ISO_T_IDLE = 0;
+            setError(EE_START);
+            return -2;
+        }
+        if (_debug_level >= DEBUG_LEVEL_DEFAULT)
+        {
+            _debug->println(F("Start diagnostic successful"));
         }
 
         if (_debug_level >= DEBUG_LEVEL_DEFAULT)
         {
-            //_debug->println(F("ECU connected"));
+            _debug->println(F("ECU connected"));
         }
         _connection_time = millis();
         _ECU_status = true;
