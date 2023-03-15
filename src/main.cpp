@@ -11,6 +11,8 @@
 #define DEBUG_IN 2  // SoftwareSerial Rx
 #define DEBUG_OUT 3 // SoftwareSerial Tx
 
+#define BOARD_LED 13
+
 #define LEDSTRIP_PIN 5                 // PWM pin on Arduino Nano
 #define LEDSTRIP_PIXELS 7              // 6 gears + neutral
 #define COLOR_ACTIVE_GEAR 0x00FF00     // Green
@@ -31,6 +33,8 @@ void setup()
 {
   pinMode(K_OUT, OUTPUT); // required?
   pinMode(K_IN, INPUT);   // required?
+  pinMode(BOARD_LED, OUTPUT);
+  digitalWrite(BOARD_LED, LOW);
 
   ledstrip.begin();
   ledstripAnimation();
@@ -42,12 +46,14 @@ void setup()
     delay(1000);
   }*/
 
-  ECU.enableDebug(&debug, DEBUG_LEVEL_VERBOSE, 9600);
+  ECU.enableDebug(&debug, DEBUG_LEVEL_DEFAULT, 9600);
   // if initialization is negative, terminate (hardware must be reset).
   if (initKline() < 0)
   {
     terminate();
   }
+  // turn on onboard LED if init successful
+  digitalWrite(BOARD_LED, HIGH);
 }
 
 void loop()

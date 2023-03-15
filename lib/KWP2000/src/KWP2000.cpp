@@ -72,6 +72,7 @@ KWP2000::KWP2000(HardwareSerial *kline_serial, const uint8_t k_out_pin)
 {
     _kline = kline_serial;
     _k_out_pin = k_out_pin;
+    set_bike_specific_values();
 
     _response = new uint8_t[ISO_MAX_DATA];
 }

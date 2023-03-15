@@ -159,6 +159,7 @@ private:
   uint8_t calc_checksum(const uint8_t data[], const uint8_t data_len);
   void endResponse(const uint8_t received_checksum);
   void connectionExpired();
+  void set_bike_specific_values();
 };
 
 #endif // KWP2000_h

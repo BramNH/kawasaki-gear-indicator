@@ -82,14 +82,26 @@ uint8_t kawasaki_request_iat[2] = {0x21, 0x05};
 uint8_t kawasaki_request_ect[2] = {0x21, 0x06};
 
 uint8_t IDX_GPS;
-uint8_t IDX_CLUTCH;
 uint8_t IDX_RPM_H;
 uint8_t IDX_RPM_L;
 uint8_t IDX_SPEED;
 uint8_t IDX_TPS;
-uint8_t IDX_STPS;
 uint8_t IDX_IAP;
 uint8_t IDX_IAT;
 uint8_t IDX_ECT;
+
+void KWP2000::set_bike_specific_values()
+{
+    ECU_addr = 0x11;
+    start_diagnostic[1] = {0x80};
+    IDX_GPS = 6;
+    IDX_RPM_H = 6;
+    IDX_RPM_L = 7;
+    IDX_SPEED = 6;
+    IDX_TPS = 6;
+    IDX_IAP = 6;
+    IDX_IAT = 6;
+    IDX_ECT = 6;
+}
 
 #endif // ISO_h
