@@ -12,6 +12,6 @@ I modified the library to limit it for communication with Kawasaki ECUs. Next to
 - **FWY-C-4F-B Connector**: *Male KDS connector, I found a cheap one on [AliExpress](https://nl.aliexpress.com/item/1005002438381284.html?spm=a2g0o.order_list.order_list_main.5.186f79d26YG6rV&gatewayAdapt=glo2nld).*
 
 ### Diagram
-The diagram will be included later. 
+![alt text](https://github.com/BramNH/kawasaki-gear-indicator/blob/main/img/schematic.jpg?raw=true)
 Some notes:
 - The W2812B LED strip can be powered from the 5V output of the Arduino Nano, this is possible since only 7 LEDs are used, limiting the current draw. It is still better to power the Arduino Nano and W2812B LED strip from an external power source (12v bike battery).
