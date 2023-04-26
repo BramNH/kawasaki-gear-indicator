@@ -1,5 +1,7 @@
 ﻿# Kawasaki W2812B Gear Indicator
+ <a href="https://www.youtube.com/shorts/qYxOT7fzgA0"><img align="right" src="https://i.ytimg.com/vi/qYxOT7fzgA0/oar2.jpg?sqp=-oaymwEaCJUDENAFSFXyq4qpAwwIARUAAIhCcAHAAQY=&rs=AOn4CLBmHTwcPXswSw9OFq_qdH_oEBWi4Q" width="215" height="324"/></a>
 A custom made gear indicator with a W2812B LED strip and some hardware to read the Gear Position Sensor (GPS) from the Kawasaki Diagnostic System (KDS).
+
 
 ## KWP2000 Library
 Most of the work is done by Aster94 through his [KWP2000](https://github.com/aster94/Keyword-Protocol-2000) library, providing an interface to communicate with Suzuki and Kawasaki bikes. Check out that GitHub page for more info about the possible hardware communication possibilities.
