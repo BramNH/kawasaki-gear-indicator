@@ -59,14 +59,19 @@ void setup()
 void loop()
 {
   int8_t status = ECU.requestGPS();
+  debug.println(status);
   if (status)
   {
     uint8_t gear = ECU.getGPS();
     // set LED accordingly
+    debug.println(gear);
     setGearOnLedstrip(gear);
   }
   else
   {
+    // might have to be replaced with keepalive function,
+    // because when arduino is not powered via bike battery
+    // and bike is turned off, this _ECU_status = true and remains true
     if (initKline() < 0)
     {
       terminate();
